@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT([liblognorm], [1.0.1], [rgerhards@adiscon.com])
+AC_INIT([liblognorm], [1.0.2], [rgerhards@adiscon.com])
 AM_INIT_AUTOMAKE
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_SRCDIR([src/lognorm.c])
@@ -74,7 +74,11 @@ AM_CONDITIONAL(ENABLE_REGEXP, test x$enable_regexp = xyes)
 if test "$enable_regexp" = "yes"; then
         AX_PATH_LIB_PCRE
         AC_DEFINE(FEATURE_REGEXP, 1, [Regular expressions support enabled.])
+	FEATURE_REGEXP=1
+else
+	FEATURE_REGEXP=0
 fi
+AC_SUBST(FEATURE_REGEXP)
 
 # debug mode settings
 AC_ARG_ENABLE(debug,
@@ -133,6 +137,7 @@ AC_CONFIG_FILES([Makefile \
 		lognorm.pc \
 		doc/Makefile \
 		src/Makefile \
+		src/lognorm-features.h \
 		tests/Makefile \
 		tests/options.sh])
 AC_OUTPUT

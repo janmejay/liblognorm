@@ -844,24 +844,24 @@ void tokenized_parser_data_destructor(void** dataPtr) {
 }
 
 static void load_generated_parser_samples(ln_ctx ctx,
-										  const char* const field_descr,
-										  const int field_descr_len,
-										  const char* const suffix,
-										  const int length) {
+										  const char* const field_type, const int field_type_len,
+										  const char* const suffix, const int length) {
 	static const char* const RULE_PREFIX = "rule=:%"DEFAULT_MATCHED_FIELD_NAME":";//TODO: extract nice constants
 	static const int RULE_PREFIX_LEN = 15;
+	char *sample_str = NULL;
 
 	es_str_t *field_decl = es_newStrFromCStr(RULE_PREFIX, RULE_PREFIX_LEN);
 	if (! field_decl) goto free;
 
-	if (es_addBuf(&field_decl, field_descr, field_descr_len) ||
-		es_addBuf(&field_decl, "%", 1) || es_addBuf(&field_decl, suffix, length)) {
-		ln_dbgprintf(ctx, "couldn't prepare field for tokenized field-picking: '%s'", field_descr);
+	if (es_addBuf(&field_decl, field_type, field_type_len)
+		|| es_addBuf(&field_decl, "%", 1)
+		|| es_addBuf(&field_decl, suffix, length)) {
+		ln_dbgprintf(ctx, "couldn't prepare field for tokenized field-picking: '%s'", field_type);
 		goto free;
 	}
-	char *sample_str = es_str2cstr(field_decl, NULL);
+	sample_str = es_str2cstr(field_decl, NULL);
 	if (! sample_str) {
-		ln_dbgprintf(ctx, "couldn't prepare sample-string for: '%s'", field_descr);
+		ln_dbgprintf(ctx, "couldn't prepare sample-string for: '%s'", field_type);
 		goto free;
 	}
 	ln_loadSample(ctx, sample_str);
@@ -999,7 +999,7 @@ BEGINParser(Regex)
 				if (pData->consume_group != pData->return_group) {
 					char* val = NULL;
 					CHKN(val = strndup(str + ovector[2 * pData->return_group],
-									   ovector[2 * pData->return_group + 1] - ovector[2 * pData->return_group]));
+						ovector[2 * pData->return_group + 1] - ovector[2 * pData->return_group]));
 					*value = json_object_new_string(val);
 					free(val);
 					if (*value == NULL) {
@@ -1013,7 +1013,8 @@ BEGINParser(Regex)
 	}
 ENDParser
 
-static const char* regex_parser_configure_consume_and_return_group(pcons_args_t* args, struct regex_parser_data_s *pData) {
+static const char* regex_parser_configure_consume_and_return_group(pcons_args_t* args,
+																   struct regex_parser_data_s *pData) {
 	const char* consume_group_parse_error = "couldn't parse consume-group number";
 	const char* return_group_parse_error = "couldn't parse return-group number";
 
@@ -1070,7 +1071,7 @@ void* regex_parser_data_constructor(ln_fieldList_t *node, ln_ctx ctx) {
 done:
 	if (r != 0) {
 		if (name == NULL) ln_dbgprintf(ctx, "couldn't allocate memory regex-field name");
-		else if (! ctx->allowRegex) ln_dbgprintf(ctx, "regex support is not enabled for: '%s' "
+		else if (! ctx->allowRegex) ln_dbgprintf(ctx, "WARNING: regex support is not enabled for: '%s' "
 												 "(please check lognorm context initialization)", name);
 		else if (pData == NULL) ln_dbgprintf(ctx, "couldn't allocate memory for parser-data for field: %s", name);
 		else if (args == NULL) ln_dbgprintf(ctx, "couldn't allocate memory for argument-parsing for field: %s", name);
