@@ -764,9 +764,8 @@ ln_normalizeRec(struct ln_ptree *tree, const char *str, size_t strLen, size_t of
 					/* Free the value if it was created */
 					json_object_put(value);
 				}
-				if(left > 0 && left < r)
+				if(left < r)
 					r = left;
-				ln_dbgprintf(tree->ctx, "%zu nonmatch, backtracking required, left=%d, r now %d", offs, left, r);
 			}
 		}
 		node = node->next;
@@ -788,10 +787,8 @@ ln_dbgprintf(tree->ctx, "%zu no field, offset already beyond end", offs);
 	if(tree->subtree[(int)str[offs]] != NULL) {
 		left = ln_normalizeRec(tree->subtree[(int)str[offs]],
 				       str, strLen, offs + 1, json, endNode);
-ln_dbgprintf(tree->ctx, "%zu got left %d, r %d", offs, left, r);
 		if(left < r)
 			r = left;
-ln_dbgprintf(tree->ctx, "%zu got return %d", offs, r);
 	}
 
 	if(r == 0 && (*endNode)->flags.isTerminal)
