@@ -31,10 +31,11 @@ TESTS_SHELLSCRIPTS = \
 	field_interpret_with_invalid_ruledef.sh \
 	field_descent.sh \
 	field_descent_with_invalid_ruledef.sh \
-        field_float.sh \
+	field_float.sh \
 	field_float_with_invalid_ruledef.sh \
 	field_suffixed.sh \
-	field_suffixed_with_invalid_ruledef.sh
+	field_suffixed_with_invalid_ruledef.sh \
+	rule_with_all_litterals.sh
 
 TESTS = \
 	user_test \
