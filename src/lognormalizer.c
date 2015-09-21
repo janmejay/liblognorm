@@ -128,13 +128,40 @@ eventHasTag(struct json_object *json, const char *tag)
 	return 0;
 }
 
+#define DEFAULT_LINE_SIZE (10 * 1024)
+
+char* read_line(FILE *fp) {
+	size_t line_capacity = DEFAULT_LINE_SIZE;
+	char *line = NULL;
+	size_t line_len = 0;
+	char ch = 0;
+	do {
+		ch = fgetc(fp);
+		if (ch == EOF) break;
+		if (line == NULL) {
+			line = malloc(line_capacity);
+		} else if (line_len == line_capacity) {
+			line_capacity *= 2;
+			line = realloc(line, line_capacity);
+		}
+		line[line_len++] = ch;
+	} while(ch != '\n');
+
+	if (line != NULL) {
+		line[--line_len] = '\0';
+		if(line_len > 0 && line[line_len - 1] == '\r')
+			line[--line_len] = '\0';
+	}
+	return line;
+}
+
 /* normalize input data
  */
 void
 normalize(void)
 {
 	FILE *fp = stdin;
-	char buf[10*1024];
+	char *line = NULL;
 	struct json_object *json = NULL;
 	long long unsigned numUnparsed = 0;
 	long long unsigned numWrongTag = 0;
@@ -144,12 +171,9 @@ normalize(void)
 		mandatoryTagCstr = es_str2cstr(mandatoryTag, NULL);
 	}
 
-	while((fgets(buf, sizeof(buf), fp)) != NULL) {
-		buf[strlen(buf)-1] = '\0';
-		if(strlen(buf) > 0 && buf[strlen(buf)-1] == '\r')
-			buf[strlen(buf)-1] = '\0';
-		if(verbose > 0) fprintf(stderr, "To normalize: '%s'\n", buf);
-		ln_normalize(ctx, buf, strlen(buf), &json);
+	while((line = read_line(fp)) != NULL) {
+		if(verbose > 0) fprintf(stderr, "To normalize: '%s'\n", line);
+		ln_normalize(ctx, line, strlen(line), &json);
 		if(json != NULL) {
 			if(eventHasTag(json, mandatoryTagCstr)) {
 				if( parsedOnly == 1
@@ -164,6 +188,7 @@ normalize(void)
 			json_object_put(json);
 			json = NULL;
 		}
+        free(line);
 	}
 	if(numUnparsed > 0)
 		fprintf(stderr, "%llu unparsable entries\n", numUnparsed);
